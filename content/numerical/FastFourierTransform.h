@@ -2,22 +2,28 @@
  * Author: Ludo Pulles, chilli, Simon Lindholm
  * Date: 2019-01-09
  * License: CC0
- * Source: http://neerc.ifmo.ru/trains/toulouse/2017/fft2.pdf (do read, it's excellent)
-   Accuracy bound from http://www.daemonology.net/papers/fft.pdf
- * Description: fft(a) computes $\hat f(k) = \sum_x a[x] \exp(2\pi i \cdot k x / N)$ for all $k$. N must be a power of 2.
-   Useful for convolution:
+ * Source: http://neerc.ifmo.ru/trains/toulouse/2017/fft2.pdf (do read, it's
+ excellent) Accuracy bound from http://www.daemonology.net/papers/fft.pdf
+ * Description: fft(a) computes $\hat f(k) = \sum_x a[x] \exp(2\pi i \cdot k x /
+ N)$ for all $k$. N must be a power of 2. Useful for convolution:
    \texttt{conv(a, b) = c}, where $c[x] = \sum a[i]b[x-i]$.
    For convolution of complex numbers or more than two vectors: FFT, multiply
-   pointwise, divide by n, reverse(start+1, end), FFT back.
+   pollwise, divide by n, reverse(start+1, end), FFT back.
    Rounding is safe if $(\sum a_i^2 + \sum b_i^2)\log_2{N} < 9\cdot10^{14}$
    (in practice $10^{16}$; higher for random inputs).
    Otherwise, use NTT/FFTMod.
  * Time: O(N \log N) with $N = |A|+|B|$ ($\tilde 1s$ for $N=2^{22}$)
  * Status: somewhat tested
- * Details: An in-depth examination of precision for both FFT and FFTMod can be found
- * here (https://github.com/simonlindholm/fft-precision/blob/master/fft-precision.md)
+ * Details: An in-depth examination of precision for both FFT and FFTMod can be
+ found
+ * here
+ (https://github.com/simonlindholm/fft-precision/blob/master/fft-precision.md)
  */
+
 #pragma once
+
+// 1. below use 32 bit int and double. check your data range and precision. If you want long double, substitute everywhere possible, and should also work.
+// 2. ALWAYS round result by +-0.5 (+ 0.5 is pos; -0.5 if neg); this is how I fail in Seoul one
 
 typedef complex<double> C;
 typedef vector<double> vd;

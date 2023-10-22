@@ -1,85 +1,87 @@
 /**
- * Author: Simon Lindholm
- * Date: 2015-02-18
- * License: CC0
- * Source: marian's (TC) code
- * Description: Aho-Corasick automaton, used for multiple pattern matching.
- * Initialize with AhoCorasick ac(patterns); the automaton start node will be at index 0.
- * find(word) returns for each position the index of the longest word that ends there, or -1 if none.
- * findAll($-$, word) finds all words (up to $N \sqrt N$ many if no duplicate patterns)
- * that start at each position (shortest first).
- * Duplicate patterns are allowed; empty patterns are not.
- * To find the longest words that start at each position, reverse all input.
- * For large alphabets, split each symbol into chunks, with sentinel bits for symbol boundaries.
- * Time: construction takes $O(26N)$, where $N =$ sum of length of patterns.
- * find(x) is $O(N)$, where N = length of x. findAll is $O(NM)$.
- * Status: stress-tested
+ * Author: Lee Zongyu
+ * Description: ans store the occurrence in dict. 
+    Build to be called after all insert.
+    Dfs is dp that store total Number of occurences, 
+    if want one occurence, can set dp[u] = val as visited.
  */
-#pragma once
+class AC {
+public:
 
-struct AhoCorasick {
-	enum {alpha = 26, first = 'A'}; // change this!
-	struct Node {
-		// (nmatches is optional)
-		int back, next[alpha], start = -1, end = -1, nmatches = 0;
-		Node(int v) { memset(next, v, sizeof(next)); }
-	};
-	vector<Node> N;
-	vi backp;
-	void insert(string& s, int j) {
-		assert(!s.empty());
-		int n = 0;
-		for (char c : s) {
-			int& m = N[n].next[c - first];
-			if (m == -1) { n = m = sz(N); N.emplace_back(-1); }
-			else n = m;
-		}
-		if (N[n].end == -1) N[n].start = j;
-		backp.push_back(N[n].end);
-		N[n].end = j;
-		N[n].nmatches++;
-	}
-	AhoCorasick(vector<string>& pat) : N(1, -1) {
-		rep(i,0,sz(pat)) insert(pat[i], i);
-		N[0].back = sz(N);
-		N.emplace_back(0);
-
-		queue<int> q;
-		for (q.push(0); !q.empty(); q.pop()) {
-			int n = q.front(), prev = N[n].back;
-			rep(i,0,alpha) {
-				int &ed = N[n].next[i], y = N[prev].next[i];
-				if (ed == -1) ed = y;
-				else {
-					N[ed].back = y;
-					(N[ed].end == -1 ? N[ed].end : backp[N[ed].start])
-						= N[y].end;
-					N[ed].nmatches += N[y].nmatches;
-					q.push(ed);
-				}
-			}
-		}
-	}
-	vi find(string word) {
-		int n = 0;
-		vi res; // ll count = 0;
-		for (char c : word) {
-			n = N[n].next[c - first];
-			res.push_back(N[n].end);
-			// count += N[n].nmatches;
-		}
-		return res;
-	}
-	vector<vi> findAll(vector<string>& pat, string word) {
-		vi r = find(word);
-		vector<vi> res(sz(word));
-		rep(i,0,sz(word)) {
-			int ind = r[i];
-			while (ind != -1) {
-				res[i - sz(pat[ind]) + 1].push_back(ind);
-				ind = backp[ind];
-			}
-		}
-		return res;
-	}
+int tot = 0;
+struct Node{
+    int next[26], ans, link, p;
+    char pch;
+    Node(int p):p(p){
+        link = 0 , ans = 0;
+        memset(next, 0,sizeof next);
+    };
 };
+vector<Node> tr;
+
+vector<int> dp;
+
+AC(){
+    tr.emplace_back(0);
+}
+// Trie
+void insert(string s) {
+    int u = 0;
+    for (int i = 0; i < s.size(); i++) {
+        if (!tr[u].next[s[i] - 'a']) 
+            tr[u].next[s[i] - 'a'] = ++tot, tr.emplace_back(u);  
+        u = tr[u].next[s[i] - 'a'];                      
+    }
+    tr[u].ans++;                                    
+}
+
+queue<int> q;
+void build() {
+    for (int i = 0; i < 26; i++)
+        if (tr[0].next[i]) q.push(tr[0].next[i]);
+    while (!q.empty()) {
+        int u = q.front();
+        q.pop();
+        for (int i = 0; i < 26; i++) {
+            if (tr[u].next[i]) {
+                tr[tr[u].next[i]].link = tr[tr[u].link].next[i];
+                q.push(tr[u].next[i]);
+            } 
+            else tr[u].next[i] = tr[tr[u].link].next[i];
+        }
+    }
+    dp.assign(tot+1,-1);
+}
+
+int dfs(int u){
+    if(dp[u] != -1) return dp[u];
+    if(u == 0) return dp[u] = 0;
+    return dp[u] = dfs(tr[u].link) + tr[u].ans;
+}
+
+int query(string t) {
+    int u = 0, res = 0;
+    for (int i = 0; i < t.size(); i++) {
+        u = tr[u].next[t[i] - 'a'];
+        res += dfs(u);
+    }
+    return res;
+}
+};
+int main(){
+    string dict[] = {"i","in","tin", "sting"};
+    AC ac;
+    for(int i = 0; i < 4; i++)
+        ac.insert(dict[i]);
+    ac.build();
+    cout << ac.query("stingin") << "\n";
+// Debug
+for(int i = 0; i <= ac.tot; i++){
+    cout << i << " th Node - ";
+    for(int k = 0; k < 26; k++) 
+        if(ac.tr[i].next[k] != 0) 
+        cout << (char)('a' + k)  << ":" << ac.tr[i].next[k] << " ";
+    cout << "Suffix: " << ac.tr[i].link;
+    cout << "\n";
+} 
+}

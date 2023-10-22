@@ -1,18 +1,17 @@
 /**
- * Author: Noam527
- * Date: 2019-04-24
- * License: CC0
- * Source: folklore
- * Description:
+ * Author: Shi Zhengyu
+ * Description: pow
  * Status: tested
  */
 #pragma once
+ll fp(ll a, ll b) {
+    ll res = 1;
+    for (; b; b /= 2, a *= a) if (b % 2) res *= a;
+    return res;
+}
 
-const ll mod = 1000000007; // faster if const
-
-ll modpow(ll b, ll e) {
-	ll ans = 1;
-	for (; e; b = b * b % mod, e /= 2)
-		if (e & 1) ans = ans * b % mod;
-	return ans;
+ll fpm(ll a, ll b, ll p) {
+    ll res = 1;
+    for (; b; b /= 2, a = (a * a) % p) if (b % 2) res = (res * a) % p;
+    return res;
 }

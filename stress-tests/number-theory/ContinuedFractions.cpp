@@ -5,7 +5,7 @@
 int main() {
 	rep(n,1,300) {
 		vector<pair<double, pii>> v;
-		rep(i,0,n+1) rep(j,1,n+1) if (__gcd(i,j) == 1) {
+		rep(i,0,n+1) rep(j,1,n+1) if (gcd(i,j) == 1) {
 			double r = (double)i / j;
 			v.emplace_back(r, pii(i,j));
 		}

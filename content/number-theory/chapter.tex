@@ -1,8 +1,7 @@
 \chapter{Number theory}
 
 \section{Modular arithmetic}
-	\kactlimport{ModularArithmetic.h}
-	\kactlimport{ModInverse.h}
+	\kactlimport{Z.h}
 	\kactlimport{ModPow.h}
 	\kactlimport{ModLog.h}
 	\kactlimport{ModSum.h}
@@ -13,19 +12,12 @@
 	\kactlimport{FastEratosthenes.h}
 	\kactlimport{MillerRabin.h}
 	\kactlimport{Factor.h}
+	\kactlimport{PrimeSieves.h}
 
 \section{Divisibility}
-	\kactlimport{euclid.h}
-	\kactlimport{Euclid.java}
+	\kactlimport{exgcd.h}
 	\kactlimport{CRT.h}
-
-	\subsection{Bézout's identity}
-	For $a \neq $, $b \neq 0$, then $d=gcd(a,b)$ is the smallest positive integer for which there are integer solutions to
-	$$ax+by=d$$
-	If $(x,y)$ is one solution, then all solutions are given by
-	$$\left(x+\frac{kb}{\gcd(a,b)}, y-\frac{ka}{\gcd(a,b)}\right), \quad k\in\mathbb{Z}$$
-
-	\kactlimport{phiFunction.h}
+	\kactlimport{multSieve.h}
 
 \section{Fractions}
 	\kactlimport{ContinuedFractions.h}

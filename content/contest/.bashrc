@@ -1,3 +1,2 @@
-alias c='g++ -Wall -Wconversion -Wfatal-errors -g -std=c++14 \
-	-fsanitize=undefined,address'
-xmodmap -e 'clear lock' -e 'keycode 66=less greater' #caps = <>
+alias C='g++ -Wshadow -Wall -Wextra -Wfatal-errors -Wformat=2 -Wfloat-equal -Wconversion -Wlogical-op -Wshift-overflow=2 -Wduplicated-cond -g -D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC -std=c++20 -fsanitize=address -pedantic -o a.out'
+alias db='gdb --quiet ./a.out'

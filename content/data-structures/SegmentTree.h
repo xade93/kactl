@@ -1,30 +1,54 @@
 /**
- * Author: Lucian Bicsi
- * Date: 2017-10-31
+ * Author: Shi Zhengyu
+ * Date: 2022-12-07
  * License: CC0
- * Source: folklore
- * Description: Zero-indexed max-tree. Bounds are inclusive to the left and exclusive to the right. Can be changed by modifying T, f and unit.
- * Time: O(\log N)
- * Status: stress-tested
+ * Description: see top for advice
  */
-#pragma once
+struct SegmentTree {
+    struct segt{
+        ll l, r;
+        ll ans; 
+    };
+    vector<segt> T;
+    
+    SegmentTree(ll n) { // don't forget to call build.
+        T.resize(n << 2);
+    }
 
-struct Tree {
-	typedef int T;
-	static constexpr T unit = INT_MIN;
-	T f(T a, T b) { return max(a, b); } // (any associative fn)
-	vector<T> s; int n;
-	Tree(int n = 0, T def = unit) : s(2*n, def), n(n) {}
-	void update(int pos, T val) {
-		for (s[pos += n] = val; pos /= 2;)
-			s[pos] = f(s[pos * 2], s[pos * 2 + 1]);
-	}
-	T query(int b, int e) { // query [b, e)
-		T ra = unit, rb = unit;
-		for (b += n, e += n; b < e; b /= 2, e /= 2) {
-			if (b % 2) ra = f(ra, s[b++]);
-			if (e % 2) rb = f(s[--e], rb);
-		}
-		return f(ra, rb);
-	}
-};
+    segt combine(segt l, segt r) {
+        segt res; res.l = l.l, res.r = r.r;    
+        res.ans = max(l.ans, r.ans);// TODO
+        return res;
+    }
+
+    void build(ll l, ll r, ll o = 1) {
+        T[o].l = l, T[o].r = r;
+        if (l == r) T[o].ans = a[l]; // TODO
+        else {
+            ll m = (l + r) >> 1;
+            build(l, m, o << 1), build(m+1, r, o << 1 | 1);
+            T[o] = combine(T[o << 1], T[o << 1 | 1]);
+        }
+    }
+
+    segt query(ll l, ll r, ll o = 1) {
+        assert(l <= r);
+        if (T[o].l == l && T[o].r == r) return T[o];
+        else {
+            ll m = (T[o].l + T[o].r) >> 1;
+            if (r <= m) return query(l, r, o << 1);
+            else if (l >= m+1) return query(l, r, o << 1 | 1);
+            return combine(query(l, m, o << 1), query(m + 1, r, o << 1 | 1));
+        }
+    }
+
+    void update(ll tx, ll nx, ll o = 1) { // singly update
+        if (T[o].l == T[o].r) // TODO
+        else {
+            ll m = (T[o].l + T[o].r) >> 1;
+            if (tx <= m) update(tx, nx, o << 1);
+            else update(tx, nx, o << 1 | 1);
+            T[o] = combine(T[o << 1], T[o << 1 | 1]);
+        }
+    }
+}

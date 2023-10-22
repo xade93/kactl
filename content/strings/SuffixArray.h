@@ -1,42 +1,122 @@
 /**
- * Author: 罗穗骞, chilli
- * Date: 2019-04-11
- * License: Unknown
- * Source: Suffix array - a powerful tool for dealing with strings
- * (Chinese IOI National team training paper, 2009)
- * Description: Builds suffix array for a string.
- * \texttt{sa[i]} is the starting index of the suffix which
- * is $i$'th in the sorted suffix array.
- * The returned vector is of size $n+1$, and \texttt{sa[0] = n}.
- * The \texttt{lcp} array contains longest common prefixes for
- * neighbouring strings in the suffix array:
- * \texttt{lcp[i] = lcp(sa[i], sa[i-1])}, \texttt{lcp[0] = 0}.
- * The input string must not contain any zero bytes.
- * Time: O(n \log n)
- * Status: stress-tested
+ * Author: Lee Zongyu
+ * Description: suffix array
  */
-#pragma once
 
-struct SuffixArray {
-	vi sa, lcp;
-	SuffixArray(string& s, int lim=256) { // or basic_string<int>
-		int n = sz(s) + 1, k = 0, a, b;
-		vi x(all(s)+1), y(n), ws(max(n, lim)), rank(n);
-		sa = lcp = y, iota(all(sa), 0);
-		for (int j = 0, p = 0; p < n; j = max(1, j * 2), lim = p) {
-			p = j, iota(all(y), n - j);
-			rep(i,0,n) if (sa[i] >= j) y[p++] = sa[i] - j;
-			fill(all(ws), 0);
-			rep(i,0,n) ws[x[i]]++;
-			rep(i,1,lim) ws[i] += ws[i - 1];
-			for (int i = n; i--;) sa[--ws[x[y[i]]]] = y[i];
-			swap(x, y), p = 1, x[sa[0]] = 0;
-			rep(i,1,n) a = sa[i - 1], b = sa[i], x[b] =
-				(y[a] == y[b] && y[a + j] == y[b + j]) ? p - 1 : p++;
-		}
-		rep(i,1,n) rank[sa[i]] = i;
-		for (int i = 0, j; i < n - 1; lcp[rank[i++]] = k)
-			for (k && k--, j = sa[rank[i] - 1];
-					s[i + k] == s[j + k]; k++);
-	}
+typedef vector<ll> vl;
+
+class SuffixArray{
+    private:
+        ll max_range = 2e5+2; // TODO the maximum value (Ensure it won,t exceed the requirement)
+        ll n;
+        
+        void countingSort(int k){      
+            vl freq(max_range);   
+            for (int i = 0; i < n; ++i)                     // count the frequency
+                freq[ i + k < n ? rk[i+k] : 0]++;           // of each integer rank
+            for (int i = 0, sum = 0; i < max_range; ++i) {
+                int t = freq[i]; 
+                freq[i] = sum;
+                sum += t;
+            }
+            vl tempsa(n);
+            for (int i = 0; i < n; ++i)                      // sort SA
+            tempsa[ freq[ sa[i]+k < n ? rk[sa[i]+k] : 0] ++ ] = sa[i];
+            swap(sa, tempsa);                                   
+        }
+
+        void constructLCP(){
+            vl phi(n);
+            vl plcp(n);
+            phi[sa[0]] = -1;
+            for(int i = 1; i < n; i++)
+                phi[sa[i]] = sa[i-1];
+            
+            for(int i = 0, l = 0; i < n; i ++ ){
+                if(phi[i] == -1){
+                    plcp[i] = 0;
+                    continue;
+                }
+                while((i+l < n ) && (phi[i] + l < n) && s[i+l] == s[phi[i] + l] ) l++;
+                plcp[i] = l;
+                l = max(l-1,0);
+            }
+            lcp.resize(n);
+            for(int i = 0; i < n; i++)
+                lcp[i] = plcp[sa[i]];
+        }
+
+        void constructSA() {                           
+            // init
+            rk.assign(n,0);
+            sa.assign(n,0);
+            iota(sa.begin(), sa.end(), 0);               
+            for (int i = 0; i < n; ++i) rk[i] = s[i];    
+
+            // repeat log_2 n times
+            for (int k = 1; k < n; k <<= 1) {          
+                countingSort(k);                           // radix sort
+                countingSort(0);                           // stable-sort
+                vl temprk(n);
+                int r = 0;
+                temprk[sa[0]] = r;                         // re-ranking process
+                for (int i = 1; i < n; ++i)                // compare adj suffixes, same pair => same rank r; otherwise, increase r
+                    temprk[sa[i]] = 
+                    ((rk[sa[i]] == rk[sa[i-1]]) && (rk[sa[i]+k] == rk[sa[i-1]+k])) ?
+                        r : ++r;
+                swap(rk, temprk);                          // update RA
+
+                // constant optimization
+                max_range = r + 1;
+                if (rk[sa[n-1]] == n-1) break;             
+            }
+        }
+    // vl for s,a,q are changable to string
+    public:
+        vl rk, sa, lcp, owner; // 0 - index lcp in sa form between me and previous
+        vector<ll> s; 
+        void discrete(vector<ll> a){
+            set<ll> st;
+            for(int c:a) st.insert(c);
+            ll idx = 0;
+            unordered_map<ll,ll> mp;
+            for(int c:st) mp[c] = idx++;
+            s.assign(a.size(),0);
+            for(int i = 0; i < n; i++) s[i] = mp[a[i]];
+        }
+        SuffixArray(vector<ll> a){
+            n = a.size();
+            discrete(a); // Comment if discretization is unnecesary;
+            constructSA();
+            constructLCP();
+        }
+
+        int lower_bound(vl q){
+            int l = 1, r = n;
+            while(l<r){
+                int m = (l+r)/2;
+                if(compare(sa[m],q)>=0) r = m;
+                else l = m + 1;
+            }
+            return (l!=n)? sa[l]: -1;
+        }
+
+        int upper_bound(vl q){
+            int l = 1, r= n;
+            while(l < r){
+                int m = (l + r)/2;
+                if(compare(sa[m], q) > 0) r = m;
+                else l = m + 1;
+            }
+            return (l!=n)? sa[l] : -1;
+        }
+
+        int compare(int idx, vl q){
+            for(int i = 0; i < q.size(); i++){ 
+                if(s[idx+i] < q[i]) return -1;
+                else if(s[idx+i] > q[i]) return 1;
+            }
+            return 0;
+        }
+
 };
