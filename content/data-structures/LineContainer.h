@@ -2,7 +2,7 @@
  * Author: Shi Zhengyu
  * Date: 2017-04-20
  * License: CC0
- * Description: for query maximum, change k < o.k to k > o.k
+ * Description: This queries maximum. For query minimum, reverse sign of all input line, as well as output. [Jakarta22]
  */
 struct Line {
     mutable ll k, m, p;
