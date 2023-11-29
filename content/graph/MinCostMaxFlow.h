@@ -1,10 +1,9 @@
 /**
- * Author: shaosy 
- * Description: Primal Dual 
+ * Author: shaosy
+ * Description: Primal Dual
  * Time: Approximately $O(V\log{V}F)$
  */
 #pragma once
-
 template <class Flow, class Cost> struct Primal_Dual { // based on EK
   struct edge {
     int u, v;
@@ -21,8 +20,7 @@ template <class Flow, class Cost> struct Primal_Dual { // based on EK
   vector<Cost> dis, h;
   vector<int> vis;
   Primal_Dual(int _n) : n(_n), E(_n), p(_n), dis(_n), h(_n), vis(_n) {
-    inf_flow = numeric_limits<Flow>::max();
-    inf_cost = numeric_limits<Cost>::max();
+    inf_flow = 1e16, inf_cost = 1e16;
   };
   void addEdge(int u, int v, Flow f, Cost c) {
     int id = (int)edg.size();
@@ -50,9 +48,8 @@ template <class Flow, class Cost> struct Primal_Dual { // based on EK
           dis[v] = dis[u] + c;
           p[v].first = u;
           p[v].second = id;
-          if (!vis[v]) {
+          if (!vis[v])
             Q.emplace(dis[v], v);
-          }
         }
       }
     }
@@ -71,10 +68,8 @@ template <class Flow, class Cost> struct Primal_Dual { // based on EK
         auto [_, v, f, c] = edg[id];
         if (f > 0 && h[v] > h[u] + c) {
           h[v] = h[u] + c;
-          if (!vis[v]) {
-            vis[v] = 1;
-            Q.push(v);
-          }
+          if (!vis[v])
+            vis[v] = 1, Q.push(v);
         }
       }
     }
@@ -85,18 +80,13 @@ template <class Flow, class Cost> struct Primal_Dual { // based on EK
     Cost minc = 0;
     while (dijkstra(s, t)) {
       auto minf = inf_flow;
-      for (int i = 0; i < n; ++i) {
+      for (int i = 0; i < n; ++i)
         h[i] += dis[i];
-      }
-      for (int i = t; i != s; i = p[i].first) {
+      for (int i = t; i != s; i = p[i].first)
         minf = min(minf, edg[p[i].second].f);
-      }
-      for (int i = t; i != s; i = p[i].first) {
-        edg[p[i].second].f -= minf;
-        edg[p[i].second ^ 1].f += minf;
-      }
-      maxf += minf;
-      minc += minf * h[t];
+      for (int i = t; i != s; i = p[i].first)
+        edg[p[i].second].f -= minf, edg[p[i].second ^ 1].f += minf;
+      maxf += minf, minc += minf * h[t];
     }
     return {maxf, minc};
   }

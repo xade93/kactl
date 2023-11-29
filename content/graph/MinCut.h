@@ -12,9 +12,7 @@ function<void(int)> dfs = [&](int u) {
   vis[u] = 1;
   for (auto id : E[u]) {
     auto [_, v, f] = edg[id];
-    if (f > 0 && !vis[v]) {
-      dfs(v);
-    }
+    if (f > 0 && !vis[v]) dfs(v);
   }
 };
 dfs(S);

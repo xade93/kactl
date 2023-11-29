@@ -12,26 +12,47 @@
  */
 #pragma once
 
-#include "LCA.h"
+#include "HLD.h"
 
-typedef vector<pair<int, int>> vpi;
-vpi compressTree(LCA& lca, const vi& subset) {
-	static vi rev; rev.resize(sz(lca.time));
-	vi li = subset, &T = lca.time;
-	auto cmp = [&](int a, int b) { return T[a] < T[b]; };
-	sort(all(li), cmp);
-	int m = sz(li)-1;
-	rep(i,0,m) {
-		int a = li[i], b = li[i+1];
-		li.push_back(lca.lca(a, b));
-	}
-	sort(all(li), cmp);
-	li.erase(unique(all(li)), li.end());
-	rep(i,0,sz(li)) rev[li[i]] = i;
-	vpi ret = {pii(0, li[0])};
-	rep(i,0,sz(li)-1) {
-		int a = li[i], b = li[i+1];
-		ret.emplace_back(rev[lca.lca(a, b)], b);
-	}
-	return ret;
-}
+struct virtual_tree {
+  heavy_light_decomposition &G;
+  vector<vector<int>> E;
+  virtual_tree(heavy_light_decomposition &ptr) : G(ptr), E(ptr.n){};
+  void build(vector<int> &node) {
+    sort(node.begin(), node.end(),
+         [&](int x, int y) { return G.dfn[x] < G.dfn[y]; });
+    E[0].clear();
+    stack<int> st;
+    st.emplace(0);
+    for (auto x : node) {
+      E[x].clear();
+      int top = G.lca(x, st.top());
+      if (top == st.top()) {
+        st.emplace(x);
+        continue;
+      }
+      auto u = st.top();
+      st.pop();
+      while (!st.empty() && G.dep[st.top()] > G.dep[top]) {
+        E[st.top()].emplace_back(u);
+        u = st.top();
+        st.pop();
+      }
+      if (!st.empty() && top == st.top()) {
+        E[top].emplace_back(u);
+      } else {
+        E[top].clear();
+        E[top].emplace_back(u);
+        st.emplace(top);
+      }
+      st.emplace(x);
+    }
+    int u = st.top();
+    st.pop();
+    while (!st.empty()) {
+      E[st.top()].emplace_back(u);
+      u = st.top();
+      st.pop();
+    }
+  }
+};

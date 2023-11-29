@@ -1,7 +1,4 @@
 /**
- * Author: Benjamin Qi, chilli
- * Date: 2020-04-04
- * License: CC0
  * Description:Key of Hungarain is to find $lx$ and $ly$ which satisfy $lx_i +
  * ly_j \geq w_{i,j}$ for all edge. For the subgraph with all the edges satisfy
  *$lx_i + ly_i = w_{i,j}$ exists perfect matching, it is the maixmum weight
@@ -14,14 +11,10 @@
  *$-w_{i,j}$. And the answer is $p = -lx, q = -ly$.
  *
  * Time: O(N^2M)
- * Status: Tested on kattis:cordonbleu, stress-tested
  */
 #pragma once
 
-template <class Cap> struct Hungarian {
-  // O(n^3), only wokrs on *bipartite graph maximum perfect matching*
-  // ok if negative, but should modify some place
-  // **1e16 is better than std::numeric_limits<>
+template <class Cap> struct Hungarain {
   int n;
   vector<int> match_x, match_y, pre;
   vector<bool> vis_x, vis_y;
@@ -34,16 +27,13 @@ template <class Cap> struct Hungarian {
   Hungarain(int _n, int _m) {
     org_n = _n, org_m = _m;
     n = max(_n, _m);
-    inf = numeric_limits<Cap>::max();
-    res = 0;
+    inf = 1e16, res = 0;
     // if negative, change here to -inf
     g = vector<vector<Cap>>(n, vector<Cap>(n));
     match_x = match_y = vector<int>(n, -1);
     pre = vector<int>(n);
     vis_x = vis_y = vector<bool>(n);
-    lx = vector<Cap>(n, -inf);
-    ly = vector<Cap>(n);
-    slack = vector<Cap>(n);
+    lx = vector<Cap>(n, -inf), ly = vector<Cap>(n), slack = vector<Cap>(n);
   };
   void addEdge(int u, int v, Cap w) { g[u][v] = w; }
   bool check(int v) {
@@ -60,15 +50,14 @@ template <class Cap> struct Hungarian {
     return true;
   }
   void bfs(int i) {
-    while (!q.empty())
-      q.pop();
+    while (!q.empty()) q.pop();
     q.push(i);
     vis_x[i] = true;
     while (true) {
       while (!q.empty()) {
         auto u = q.front();
         q.pop();
-        for (int v = 0; v < n; ++v) {
+        for (int v = 0; v < n; ++v)
           if (!vis_y[v]) {
             auto delta = lx[u] + ly[v] - g[u][v];
             if (slack[v] >= delta) {
@@ -79,29 +68,26 @@ template <class Cap> struct Hungarian {
                 return;
             }
           }
-        }
       }
       auto a = inf;
-      for (int j = 0; j < n; ++j)
-        if (!vis_y[j])
-          a = min(a, slack[j]);
       for (int j = 0; j < n; ++j) {
-        if (vis_x[j])
-          lx[j] -= a;
+        if (!vis_y[j]) a = min(a, slack[j]);
+      }
+      for (int j = 0; j < n; ++j) {
+        if (vis_x[j]) lx[j] -= a;
         if (vis_y[j])
           ly[j] += a;
         else
           slack[j] -= a;
       }
       for (int j = 0; j < n; ++j)
-        if (!vis_y[j] && slack[j] == 0 && check(j))
-          return;
+        if (!vis_y[j] && slack[j] == 0 && check(j)) return;
     }
   }
   void solve() {
-    for (int i = 0; i < n; ++i)
-      for (int j = 0; j < n; ++j)
-        lx[i] = max(lx[i], g[i][j]);
+    for (int i = 0; i < n; ++i) {
+      for (int j = 0; j < n; ++j) lx[i] = max(lx[i], g[i][j]);
+    }
     for (int i = 0; i < n; ++i) {
       fill(slack.begin(), slack.end(), inf);
       fill(vis_x.begin(), vis_x.end(), false);
