@@ -166,3 +166,19 @@ fixed by g.
 \raisebox{0.0\height}{\includegraphics[width=8.92449822904368cm,height=2.845425996261112cm]{/home/xade/icpc/kactl/content/combinatorial/2.pdf}}
 
 
+
+\subsubsection{Games.}
+\begin{tmindent}
+  Nim Game. Pick stone from k pile, at least 1, who cannot move lose. 
+  XOR=0 lose.
+
+  Bash Game. Pick stone from 1 pile, at least 1, at most m, who cannot move lose.
+  n mod m+1=0 lose. apparent.
+
+  Fib Game. Pick from k pile, at least 1, at most a[i]-1, at most previous taken*2, who cannot move lose.
+  n is Fib lose. [?]
+
+  Wythoff's Game. Pick from 2 piles, either pick 1 from any, or pick t from each pile (hence picking 2t elements, t is determined by player, t>1). cannot move lose.
+  case discuss lead to $a[k] = (int)((b[k] - a[k]) * 1.618)$ where 1.618 is golden ratio
+    
+\end{tmindent}
