@@ -36,7 +36,6 @@
 \tmop{mod} p$
 \begin{tmindent}
   Convention is $C (n, k) = 0$ if $k > n$.
-  
   Corollary. mod = 0 iff there is a digit of n greater than k.
 \end{tmindent}
 
@@ -75,10 +74,10 @@ into exact k group.
     ll S2(ll n, ll k) \{
       ll ans = 0;
       FOR(i, 0, k) \{
-        ll sgn = ((k - i) % 2 ? -1 : 1);
-        ll in = fpm(i, n, p);
-        ll bottom = invfac[i] * invfac[k - i] % p;
-        ans = (ans + sgn * in * bottom % p) % p;
+       ll sgn = ((k - i) % 2 ? -1 : 1);
+       ll in = fpm(i, n, p);
+       ll bottom = invfac[i] * invfac[k - i] % p;
+       ans = (ans + sgn * in * bottom % p) % p;
       \}
       return (ans % p + p) % p;
     \}
