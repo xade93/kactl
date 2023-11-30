@@ -1,102 +1,133 @@
-/**
- * Author: Simon Lindholm
- * Date: 2016-07-25
- * Source: https://github.com/ngthanhtrung23/ACM_Notebook_new/blob/master/DataStructure/LinkCut.h
- * Description: Represents a forest of unrooted trees. You can add and remove
- * edges (as long as the result is still a forest), and check whether
- * two nodes are in the same tree.
- * Time: All operations take amortized O(\log N).
- * Status: Stress-tested a bit for N <= 20
- */
-#pragma once
+class LCT {
+  // node
 
-struct Node { // Splay tree. Root's pp contains tree's parent.
-	Node *p = 0, *pp = 0, *c[2];
-	bool flip = 0;
-	Node() { c[0] = c[1] = 0; fix(); }
-	void fix() {
-		if (c[0]) c[0]->p = this;
-		if (c[1]) c[1]->p = this;
-		// (+ update sum of subtree elements etc. if wanted)
-	}
-	void pushFlip() {
-		if (!flip) return;
-		flip = 0; swap(c[0], c[1]);
-		if (c[0]) c[0]->flip ^= 1;
-		if (c[1]) c[1]->flip ^= 1;
-	}
-	int up() { return p ? p->c[1] == this : -1; }
-	void rot(int i, int b) {
-		int h = i ^ b;
-		Node *x = c[i], *y = b == 2 ? x : x->c[h], *z = b ? y : x;
-		if ((y->p = p)) p->c[up()] = y;
-		c[i] = z->c[i ^ 1];
-		if (b < 2) {
-			x->c[h] = y->c[h ^ 1];
-			z->c[h ^ 1] = b ? x : this;
-		}
-		y->c[i ^ 1] = b ? this : x;
-		fix(); x->fix(); y->fix();
-		if (p) p->fix();
-		swap(pp, y->pp);
-	}
-	void splay() { /// Splay this up to the root. Always finishes without flip set.
-		for (pushFlip(); p; ) {
-			if (p->p) p->p->pushFlip();
-			p->pushFlip(); pushFlip();
-			int c1 = up(), c2 = p->up();
-			if (c2 == -1) p->rot(c1, 2);
-			else p->p->rot(c2, c1 != c2);
-		}
-	}
-	Node* first() { /// Return the min element of the subtree rooted at this, splayed to the top.
-		pushFlip();
-		return c[0] ? c[0]->first() : (splay(), this);
-	}
-};
+ public:
+  int sum[maxn], val[maxn];
+  int s[maxn][2], fa[maxn];
 
-struct LinkCut {
-	vector<Node> node;
-	LinkCut(int N) : node(N) {}
+ private:
+  bool lzy_fan[maxn];
 
-	void link(int u, int v) { // add an edge (u, v)
-		assert(!connected(u, v));
-		makeRoot(&node[u]);
-		node[u].pp = &node[v];
-	}
-	void cut(int u, int v) { // remove an edge (u, v)
-		Node *x = &node[u], *top = &node[v];
-		makeRoot(top); x->splay();
-		assert(top == (x->pp ?: x->c[0]));
-		if (x->pp) x->pp = 0;
-		else {
-			x->c[0] = top->p = 0;
-			x->fix();
-		}
-	}
-	bool connected(int u, int v) { // are u, v in the same tree?
-		Node* nu = access(&node[u])->first();
-		return nu == access(&node[v])->first();
-	}
-	void makeRoot(Node* u) { /// Move u to root of represented tree.
-		access(u);
-		u->splay();
-		if(u->c[0]) {
-			u->c[0]->p = 0;
-			u->c[0]->flip ^= 1;
-			u->c[0]->pp = u;
-			u->c[0] = 0;
-			u->fix();
-		}
-	}
-	Node* access(Node* u) { /// Move u to root aux tree. Return the root of the root aux tree.
-		u->splay();
-		while (Node* pp = u->pp) {
-			pp->splay(); u->pp = 0;
-			if (pp->c[1]) {
-				pp->c[1]->p = 0; pp->c[1]->pp = pp; }
-			pp->c[1] = u; pp->fix(); u = pp;
-		}
-		return u;
-	}
+  void push_up(int x) {
+    sum[x] = val[x] ^ sum[s[x][0]] ^ sum[s[x][1]];
+  }
+  
+  bool nrt(int x) {
+    return s[fa[x]][0] == x || s[fa[x]][1] == x;
+  }
+  
+  void fan(int x) {
+    swap(s[x][0], s[x][1]);
+    lzy_fan[x] ^= 1;
+  }
+  
+  void push_down(int x) {
+    if (lzy_fan[x]) {
+      if (s[x][0]) {
+        fan(s[x][0]);
+      }
+      if (s[x][1]) {
+        fan(s[x][1]);
+      }
+      lzy_fan[x] = 0;
+    }
+  }
+  
+  // splay
+ private:
+  void rotate(int x) {
+    int y = fa[x], z = fa[y];
+    int k = (s[y][1] == x), ss = s[x][!k];
+    if (nrt(y)) {
+      s[z][s[z][1] == y] = x;
+    }
+    fa[x] = z;
+    s[x][!k] = y;
+    fa[y] = x;
+    s[y][k] = ss;
+    if (ss) {
+      fa[ss] = y;
+    }
+    push_up(y);
+    push_up(x);
+  }
+  
+  int sta[maxn];
+  void splay(int x) {
+    int K = x, top = 0;
+    sta[++top] = K;
+    while (nrt(K)) {
+      sta[++top] = K = fa[K];
+    }
+    while (top) {
+      push_down(sta[top--]);
+    }
+    while (nrt(x)) {
+      int y = fa[x], z = fa[y];
+      if (nrt(y)) {
+        rotate(((s[y][0] == x) ^ (s[z][0] == y)) ? x : y);
+      }
+      rotate(x);
+    }
+  }
+  
+  // LCT
+ private:
+  void access(int x) {
+    for (int y = 0; x; x = fa[y = x]) {
+      splay(x);
+      s[x][1] = y;
+      push_up(x);
+    }
+  }
+  
+  void make_root(int x) {
+    access(x);
+    splay(x);
+    fan(x);
+  }
+  
+  int find_root(int x) {
+    access(x);
+    splay(x);
+    while (s[x][0]) {
+      push_down(x);
+      x = s[x][0];
+    }
+    splay(x);
+    return x;
+  }
+  
+  void split(int x, int y) {
+    make_root(x);
+    access(y);
+    splay(y);
+  }
+  
+ public:
+  void link(int x, int y) {
+    make_root(x);
+    if (find_root(y) != x) {
+      fa[x] = y;
+    }
+  }
+  
+  void cut(int x, int y) {
+    make_root(x);
+    if (find_root(y) == x && fa[y] == x && !s[y][0]) {
+      fa[y] = s[x][1] = 0;
+      push_up(x);
+    }
+  }
+  
+  void change(int x, int y) {
+    splay(x);
+    val[x] = y;
+    push_up(x);
+  }
+  
+  int ask(int x, int y) {
+    split(x, y);
+    return sum[y];
+  }
 };
